@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="/Users/adrien/eclipse-workspace/LinSolver/libs/choco-graph-4.2.3.jar"/>
+	<classpathentry kind="lib" path="/Users/adrien/eclipse-workspace/LinSolver/libs/choco-parsers-4.0.4-with-dependencies.jar"/>
+	<classpathentry kind="lib" path="/Users/adrien/eclipse-workspace/LinSolver/libs/commons-configuration2-2.6.jar"/>
+	<classpathentry kind="lib" path="/Users/adrien/eclipse-workspace/LinSolver/libs/commons-lang3-3.9.jar"/>
+	<classpathentry kind="lib" path="/Users/adrien/eclipse-workspace/LinSolver/libs/commons-logging-1.2.jar"/>
+	<classpathentry kind="lib" path="/Users/adrien/eclipse-workspace/LinSolver/libs/commons-math3-3.6.1-javadoc.jar"/>
+	<classpathentry kind="lib" path="/Users/adrien/eclipse-workspace/LinSolver/libs/commons-math3-3.6.1-sources.jar"/>
+	<classpathentry kind="lib" path="/Users/adrien/eclipse-workspace/LinSolver/libs/commons-math3-3.6.1-test-sources.jar"/>
+	<classpathentry kind="lib" path="/Users/adrien/eclipse-workspace/LinSolver/libs/commons-math3-3.6.1-tests.jar"/>
+	<classpathentry kind="lib" path="/Users/adrien/eclipse-workspace/LinSolver/libs/commons-math3-3.6.1-tools.jar"/>
+	<classpathentry kind="lib" path="/Users/adrien/eclipse-workspace/LinSolver/libs/commons-math3-3.6.1.jar"/>
+	<classpathentry kind="lib" path="/Users/adrien/eclipse-workspace/LinSolver/libs/commons-text-1.8.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
