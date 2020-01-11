@@ -761,7 +761,7 @@ public class BenzenoidsSolver {
     public static void main(String[] args) {
 
     	Utils.initTab();
-    	
+ /*   	
         if (args.length == 0) {
             displayUsage();
             System.exit(1);
@@ -778,7 +778,7 @@ public class BenzenoidsSolver {
                 e.printStackTrace();
             }
         }
-
+*/
         pathNoCoords = null;
         
         try {
@@ -791,12 +791,12 @@ public class BenzenoidsSolver {
         long begin = System.currentTimeMillis();
 
         //analyzeMolecule(path); 
-        //pathNoCoords = "/Users/adrien/CLionProjects/ConjugatedCycles/molecules/coronnoids/3_crowns_structure.graph";
-        pathNoCoords = "/home/adrien/CLionProjects/ConjugatedCycle/molecules/coronnoids/3_crowns_structure.graph";
+        pathNoCoords = "/Users/adrien/CLionProjects/ConjugatedCycles/molecules/coronnoids/3_crowns_structure.graph";
+        //pathNoCoords = "/home/adrien/CLionProjects/ConjugatedCycle/molecules/coronnoids/3_crowns_structure.graph";
         //pathNoCoords = null;
         try {
-			//analyzeMolecule("/Users/adrien/CLionProjects/ConjugatedCycles/molecules/coronnoids/3_crowns.graph_coord");
-        	analyzeMolecule("/home/adrien/CLionProjects/ConjugatedCycle/molecules/coronnoids/3_crowns.graph_coord");
+			analyzeMolecule("/Users/adrien/CLionProjects/ConjugatedCycles/molecules/coronnoids/3_crowns.graph_coord");
+        	//analyzeMolecule("/home/adrien/CLionProjects/ConjugatedCycle/molecules/coronnoids/3_crowns.graph_coord");
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

@@ -19,6 +19,10 @@ import parser.GraphParser;
 
 public class LinSolver {
 
+	
+	private static int indexStructure = 0;
+	private static int hexa;
+	
 	private static final int MAX_CIRCUIT_SIZE = 10;
 	private static int [] rCount = new int [MAX_CIRCUIT_SIZE];
 	
@@ -158,6 +162,10 @@ public class LinSolver {
 						for (Integer node : candidat)
 							newCandidat.add(node);
 						
+						
+						if (v == 47 && indexStructure == 80 && hexa == 18)
+							System.out.print("");
+							
 						newCandidat.add(v);
 						candidates.add(newCandidat);
 						
@@ -225,13 +233,11 @@ public class LinSolver {
 					}
 				}
 				
-				if (nbNewCandidates == 0)
-					return new ArrayList<ArrayList<Edge>>();
-				
 				candidates.remove(0);
 			}
 			
-			
+			if (nbNewCandidates == 0)
+				return new ArrayList<ArrayList<Edge>>();
 		}
 		
 		
@@ -376,6 +382,13 @@ public class LinSolver {
 	
 	public static List<Edge> computeCircuitCase2(UndirPonderateGraph kekuleStructure, int hexagon) {
 		
+		hexa = hexagon;
+		
+		if (indexStructure == 80 && hexagon == 18) {
+			System.out.print("");
+		}
+			
+		
 		int [] hexagonVertices = kekuleStructure.getHexagons()[hexagon];
 		int [] hexagonDoubleBounds = computeDoubleBounds(kekuleStructure, hexagon);
 		
@@ -515,9 +528,21 @@ public class LinSolver {
 				return path;
 			}
 		}
+	
+		List<Edge> pV1V2, pV3V4, pV2V3, pV4V1;
+		int l1, l2, l3, l4;
 		
-		List<Edge> pV1V2 = paths.get(0);
-		int l1 = pV1V2.size();
+		if (paths.size() == 0) {
+			pV1V2 = null;
+			l1 = 0;
+		}
+		 
+		else {
+			pV1V2 = paths.get(0);
+			l1 = pV1V2.size();
+		}
+			
+		
 		
 		/*
 		 * Computing all paths between v3 and v4
@@ -536,16 +561,21 @@ public class LinSolver {
 			}
 		}
 		
-		List<Edge> pV3V4 = paths.get(0);
-		int l2 = pV3V4.size();
+		if (paths.size() == 0) {
+			pV3V4 = null;
+			l2 = 0;
+		}
+		
+		else {
+			pV3V4 = paths.get(0);
+			l2 = pV3V4.size();
+		}
 		
 		/*
 		 * Looking for one path between v2 and v3
 		 */
 		
 		paths = computeAllPaths(kekuleStructure, v2, v3);
-		ArrayList<Edge> pV2V3;
-		int l3;
 		
 		if (paths.size() == 0) {
 			pV2V3 = null;
@@ -561,9 +591,7 @@ public class LinSolver {
 		 */
 		
 		paths = computeAllPaths(kekuleStructure, v4, v1);
-		ArrayList<Edge> pV4V1;
-		int l4;
-		
+				
 		if (paths.size() == 0) {
 			pV4V1 = null;
 			l4 = 0;
@@ -573,6 +601,50 @@ public class LinSolver {
 			l4 = pV4V1.size();
 		}
 		
+		boolean path1 = false, path2 = false;
+		
+		if (l1 == 0 || l2 == 0) {
+			path2 = true;
+		}
+		
+		if (l3 == 0 || l4 == 0) {
+			path1 = true;
+		}
+		
+		if (l1 != 0 && l2 != 0 && l3 != 0 && l4 != 0) {
+		
+			if (l1 + l2 <= l3 + l4 - 2) {
+				path1 = true;
+			}
+		
+			else {
+				path1 = false;
+			}
+		}
+		
+		if (path1) {
+			List<Edge> path = new ArrayList<Edge>();
+			path.addAll(pV1V2);
+			path.add(new Edge(v2, v3));
+			path.addAll(pV3V4);
+			path.add(new Edge(v4, v5));
+			path.add(new Edge(v5, v6));
+			path.add(new Edge(v6, v1));
+			
+			return path; // size = L1 + L2 + 4;
+		}
+		
+		else {
+			List<Edge> path = new ArrayList<Edge>();
+			path.add(new Edge(v1, v2));
+			path.addAll(pV2V3);
+			path.add(new Edge(v3, v4));
+			path.addAll(pV4V1);
+			
+			return path; // size = L3 + L4 + 2
+		}
+		
+		/*
 		if (l1 + l2 <= l3 + l4 - 2) {
 			List<Edge> path = new ArrayList<Edge>();
 			path.addAll(pV1V2);
@@ -594,6 +666,7 @@ public class LinSolver {
 			
 			return path; // size = L3 + L4 + 2
 		}
+		*/
 	}
 	
 	public static List<Edge> computeCircuitCase4(UndirPonderateGraph kekuleStructure, int hexagon) {
@@ -808,7 +881,13 @@ public class LinSolver {
 	            UndirPonderateGraph kekuleStructure = GraphParser.exportSolutionToPonderateGraph(graph, edgesValues);
 	            computeCircuits(kekuleStructure);
 	            
+	            indexStructure ++;
 	        }     
+	        
+	        for (int index = 0 ; index < rCount.length ; index ++) {
+	        	System.out.print("(" + rCount[index] + " * R" + (index + 1) + ")" );
+	        }
+	        System.out.println("");
 	}
 	
 	public static void displayUsage() {
