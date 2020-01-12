@@ -29,6 +29,8 @@ import org.chocosolver.solver.search.strategy.selectors.variables.FirstFail;
 
 public class BenzenoidsSolver {
 	
+	private static int idStructure = 0;
+	
     //LOGS
     private static BufferedWriter log = null;
     private static BufferedWriter debug;
@@ -115,11 +117,11 @@ public class BenzenoidsSolver {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-            
+/*            
             if (debug != null) {
 				debug.write(structure.exportToDebugLine() + "=> ");
             } 
-				
+*/				
             computeCycles(structure);
 
             structures.add(structure);
@@ -636,6 +638,8 @@ public class BenzenoidsSolver {
 			cycles.add(cycle);
         }
 
+        if (idStructure == 23)
+        	System.out.println("");
         
         Collections.sort(cycles);
  
@@ -651,26 +655,6 @@ public class BenzenoidsSolver {
         		System.out.print("");
         
         for (Cycle cycle : cycles) {
-        	/*
-        	boolean independant = false;
-        	for (Integer hexagon : cycle.getHexagonsCovered()) {
-        		if (hexagonsCovered[hexagon] == 0 || hexagonsCovered[hexagon] == -1) {
-        			hexagonsCovered[hexagon] = 1;
-        			independant = true;
-        		}
-        	}
-        	
-        	if (independant) {
-        		System.out.println(cycle.toString() + " INDEPENDANT");
-        		RCount[getR(cycle.getNbEdges() * 2)]++;
-        		localRCount[getR(cycle.getNbEdges() * 2)]++;
-    			nbCycles ++;
-        	} else {
-        		System.out.println(cycle.toString() + " DEPENDANT");
-        		System.out.print("");
-        	}
-        	*/
-        	
         	int cycleSize = getR(cycle.getNbEdges() * 2);
         	
         	for (Integer hexagon : cycle.getHexagonsCovered()) {
@@ -689,10 +673,12 @@ public class BenzenoidsSolver {
     		}
     	}
         
+        debug.write(idStructure + " => ");
         for (int i = 0 ; i < localRCount.length ; i++) {
         	debug.write(localRCount[i] + " ");
         }
         debug.write("\n");
+        idStructure ++;
         
         nbCyclesList.add(nbCycles);
     }
@@ -761,7 +747,7 @@ public class BenzenoidsSolver {
     public static void main(String[] args) {
 
     	Utils.initTab();
- /*   	
+/*    	
         if (args.length == 0) {
             displayUsage();
             System.exit(1);

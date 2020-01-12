@@ -1,5 +1,8 @@
 package solver;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +22,7 @@ import parser.GraphParser;
 
 public class LinSolver {
 
+	static BufferedWriter debug;
 	
 	private static int indexStructure = 0;
 	private static int hexa;
@@ -161,11 +165,7 @@ public class LinSolver {
 						ArrayList<Integer> newCandidat = new ArrayList<Integer>();
 						for (Integer node : candidat)
 							newCandidat.add(node);
-						
-						
-						if (v == 47 && indexStructure == 80 && hexa == 18)
-							System.out.print("");
-							
+												
 						newCandidat.add(v);
 						candidates.add(newCandidat);
 						
@@ -384,11 +384,6 @@ public class LinSolver {
 		
 		hexa = hexagon;
 		
-		if (indexStructure == 80 && hexagon == 18) {
-			System.out.print("");
-		}
-			
-		
 		int [] hexagonVertices = kekuleStructure.getHexagons()[hexagon];
 		int [] hexagonDoubleBounds = computeDoubleBounds(kekuleStructure, hexagon);
 		
@@ -446,6 +441,9 @@ public class LinSolver {
 	}
 	
 	public static List<Edge> computeCircuitCase3(UndirPonderateGraph kekuleStructure, int hexagon) {
+		
+		if (indexStructure == 9 && hexagon == 13)
+			System.out.print("");
 		
 		int [] hexagonVertices = kekuleStructure.getHexagons()[hexagon];
 		int [] hexagonDoubleBounds = computeDoubleBounds(kekuleStructure, hexagon);
@@ -671,6 +669,9 @@ public class LinSolver {
 	
 	public static List<Edge> computeCircuitCase4(UndirPonderateGraph kekuleStructure, int hexagon) {
 		
+		if (indexStructure == 23 && hexagon == 12)
+			System.out.print("");
+		
 		int [] hexagonVertices = kekuleStructure.getHexagons()[hexagon];
 		
 		/*
@@ -706,7 +707,7 @@ public class LinSolver {
 			l1 = pV1V2.size();
 		}
 		
-		if (!pathExists) {
+		if (pathExists) {
 			
 			paths = computeAllPaths(kekuleStructure, v3, v4);
 			
@@ -719,7 +720,7 @@ public class LinSolver {
 			}
 		}
 		
-		if (!pathExists) {
+		if (pathExists) {
 			
 			paths = computeAllPaths(kekuleStructure, v5, v6);
 			
@@ -762,7 +763,7 @@ public class LinSolver {
 			l4 = pV2V3.size();
 		}
 		
-		if (!pathExists) {
+		if (pathExists) {
 			
 			paths = computeAllPaths(kekuleStructure, v4, v5);
 			
@@ -775,7 +776,7 @@ public class LinSolver {
 			}
 		}
 		
-		if (!pathExists) {
+		if (pathExists) {
 			
 			paths = computeAllPaths(kekuleStructure, v6, v1);
 			
@@ -796,22 +797,29 @@ public class LinSolver {
 		C2.addAll(pV6V1);
 		C2.add(new Edge(v1, v2));
 		
-		if (l1 + l2 + l3 > l4 + l5 + l6)
-			return C1;
-		else 
+		if (l1 + l2 + l3 > l4 + l5 + l6) 
 			return C2;
+		else 
+			return C1;
 
 	}
 	
 	public static void computeCircuits(UndirPonderateGraph kekuleStructure) {
 		
+		if (indexStructure == 23)
+			System.out.print("");
+		
+		int [] localRCount = new int[rCount.length];
+		
 		for (int hexagon = 0 ; hexagon < kekuleStructure.getNbHexagons() ; hexagon ++) {
 			
 			int configuration = getHexagonConfiguration(kekuleStructure, hexagon);
 			List<Edge> circuit = null;
-			
-			if (configuration == 0)
+						
+			if (configuration == 0) {
 				rCount[0] ++;
+				localRCount[0] ++;
+			}
 			
 			else if (configuration == 1)		
 				circuit = computeCircuitCase1(kekuleStructure, hexagon);			
@@ -828,8 +836,19 @@ public class LinSolver {
 			if (circuit != null) {
 				int ri = (circuit.size() - 2) / 4;
 				rCount[ri - 1] ++;
+				localRCount[ri -1] ++;
 			}
 		}
+		
+		try {
+			debug.write(indexStructure + " => ");
+			for (int i = 0 ; i < localRCount.length ; i++)
+				debug.write(localRCount[i] + " ");
+			debug.write("\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 		
 	}
 	
@@ -881,6 +900,9 @@ public class LinSolver {
 	            UndirPonderateGraph kekuleStructure = GraphParser.exportSolutionToPonderateGraph(graph, edgesValues);
 	            computeCircuits(kekuleStructure);
 	            
+	            if (indexStructure == 23)
+	            	kekuleStructure.displayDoubleBounds();
+	            
 	            indexStructure ++;
 	        }     
 	        
@@ -900,6 +922,8 @@ public class LinSolver {
 		//	displayUsage();
 		
 		//String filename = args[0];
+		debug = new BufferedWriter(new FileWriter(new File("debug_lin")));
+		
 		String filename = "/Users/adrien/CLionProjects/ConjugatedCycles/molecules/coronnoids/3_crowns.graph_coord";
 		String filenameNoCoords = "/Users/adrien/CLionProjects/ConjugatedCycles/molecules/coronnoids/3_crowns_structure.graph";
 		

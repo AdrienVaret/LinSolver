@@ -276,6 +276,16 @@ private int nbNodes, nbEdges, nbHexagons;
 		return builder.toString();
 	}
 	
+	public void displayDoubleBounds() {
+		System.out.println("------");
+		for (int i = 0 ; i < adjacencyMatrix.length ; i++) {
+			for (int j = i + 1 ; j < adjacencyMatrix[i].length ; j++) {
+				if (adjacencyMatrix[i][j] == 1)
+					System.out.println("(" + i + ", " + j + ") = 1");
+			}
+		}
+	}
+	
 	public int getMaxIndex() {
 		return maxIndex;
 	}
