@@ -25,7 +25,7 @@ public class LinSolver {
 	static BufferedWriter debug;
 	
 	private static int indexStructure = 0;
-	private static int hexa;
+	
 	
 	private static final int MAX_CIRCUIT_SIZE = 10;
 	private static int [] rCount = new int [MAX_CIRCUIT_SIZE];
@@ -381,9 +381,7 @@ public class LinSolver {
 	}
 	
 	public static List<Edge> computeCircuitCase2(UndirPonderateGraph kekuleStructure, int hexagon) {
-		
-		hexa = hexagon;
-		
+
 		int [] hexagonVertices = kekuleStructure.getHexagons()[hexagon];
 		int [] hexagonDoubleBounds = computeDoubleBounds(kekuleStructure, hexagon);
 		
@@ -440,6 +438,7 @@ public class LinSolver {
 		return path;
 	}
 	
+	@SuppressWarnings("unused")
 	public static List<Edge> computeCircuitCase3(UndirPonderateGraph kekuleStructure, int hexagon) {
 		
 		if (indexStructure == 9 && hexagon == 13)
@@ -909,7 +908,6 @@ public class LinSolver {
 	        for (int index = 0 ; index < rCount.length ; index ++) {
 	        	System.out.print("(" + rCount[index] + " * R" + (index + 1) + ")" );
 	        }
-	        System.out.println("");
 	}
 	
 	public static void displayUsage() {
@@ -918,15 +916,21 @@ public class LinSolver {
 	
 	public static void main(String [] args) throws IOException {
 		
-		//if (args.length < 1)
-		//	displayUsage();
+		if (args.length < 1)
+			displayUsage();
 		
-		//String filename = args[0];
+		String filename = args[0];
+		String filenameNoCoords = args[1];
 		debug = new BufferedWriter(new FileWriter(new File("debug_lin")));
 		
-		String filename = "/Users/adrien/CLionProjects/ConjugatedCycles/molecules/coronnoids/3_crowns.graph_coord";
-		String filenameNoCoords = "/Users/adrien/CLionProjects/ConjugatedCycles/molecules/coronnoids/3_crowns_structure.graph";
+		//String filename = "/Users/adrien/CLionProjects/ConjugatedCycles/molecules/coronnoids/3_crowns.graph_coord";
+		//String filenameNoCoords = "/Users/adrien/CLionProjects/ConjugatedCycles/molecules/coronnoids/3_crowns_structure.graph";
 		
+		long begin = System.currentTimeMillis();
 		computeEnergy(filename, filenameNoCoords);
+		long end = System.currentTimeMillis();
+		
+		long time = end - begin;
+		System.out.println("\t" + time + " ms.");
 	}
 }
