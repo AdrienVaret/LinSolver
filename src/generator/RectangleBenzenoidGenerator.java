@@ -5,7 +5,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.io.File;
 
 public class RectangleBenzenoidGenerator {
@@ -268,7 +267,7 @@ public class RectangleBenzenoidGenerator {
 			}
 		}
 		
-		writer.write("p DIMACS " + (index-1) + " " + edges.size() + " " + (width * height) + " \n");
+		writer.write("p DIMACS " + (index-1) + " " + edges.size() + " " + (width * height) + (index - 1) +  " \n");
 		
 		for(String edge : edges)
 			writer.write(edge);
