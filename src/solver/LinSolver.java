@@ -4,8 +4,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solution;
@@ -22,12 +24,13 @@ import parser.GraphParser;
 
 public class LinSolver {
 
-	static BufferedWriter debug;
+	private static BufferedWriter debug;
+	private static BufferedWriter log;
 	
 	private static int indexStructure = 0;
 	
 	
-	private static final int MAX_CIRCUIT_SIZE = 10;
+	private static final int MAX_CIRCUIT_SIZE = 20;
 	private static int [] rCount = new int [MAX_CIRCUIT_SIZE];
 	
 	public static boolean containsNode(ArrayList<Edge> path, int v) {
@@ -307,8 +310,8 @@ public class LinSolver {
 		
 		for (ArrayList<Edge> path : paths) {
 			
-			int [] nodesPath = new int [kekuleStructure.getMaxIndex()];
-			int [] curentNodes = new int[kekuleStructure.getMaxIndex()];
+			int [] nodesPath = new int [kekuleStructure.getMaxIndex() + 1];
+			int [] curentNodes = new int[kekuleStructure.getMaxIndex() + 1];
 			
 			for (Edge edge : path) {
 				nodesPath[edge.getU()] = 1;
@@ -317,43 +320,44 @@ public class LinSolver {
 			
 			int curentHexagon = kekuleStructure.getDualGraph()[hexagon][direction];
 			
-			while (true) {
+			if (curentHexagon != -1) {
+				while (true) {
 				
-				boolean containsAll = true;
+					boolean containsAll = true;
 				
-				for (int i = 0 ; i < 6 ; i++) {
-					int node = kekuleStructure.getHexagons()[curentHexagon][i];
+					for (int i = 0 ; i < 6 ; i++) {
+						int node = kekuleStructure.getHexagons()[curentHexagon][i];
 					
-					if (nodesPath[node] == 1)
-						curentNodes[node] = 1;
-					else {
-						containsAll = false;
+						if (nodesPath[node] == 1)
+							curentNodes[node] = 1;
+						else {
+							containsAll = false;
+							break;
+						}
+					}
+				
+					if (!containsAll)
+						break;
+				
+					boolean pathEquals = true;
+					for (int i = 0 ; i < nodesPath.length ; i++) {
+						if (nodesPath[i] != curentNodes[i]) {
+							pathEquals = false;
+							break;
+						}
+					}
+				
+					if (pathEquals) {
+						straightPath = path;
 						break;
 					}
-				}
 				
-				if (!containsAll)
-					break;
+					curentHexagon = kekuleStructure.getDualGraph()[curentHexagon][direction];
 				
-				boolean pathEquals = true;
-				for (int i = 0 ; i < nodesPath.length ; i++) {
-					if (nodesPath[i] != curentNodes[i]) {
-						pathEquals = false;
+					if (curentHexagon == -1)
 						break;
-					}
 				}
-				
-				if (pathEquals) {
-					straightPath = path;
-					break;
-				}
-				
-				curentHexagon = kekuleStructure.getDualGraph()[curentHexagon][direction];
-				
-				if (curentHexagon == -1)
-					break;
 			}
-			
 			if(straightPath != null)
 				break;
 		}
@@ -897,17 +901,24 @@ public class LinSolver {
 	             */
 	            
 	            UndirPonderateGraph kekuleStructure = GraphParser.exportSolutionToPonderateGraph(graph, edgesValues);
-	            computeCircuits(kekuleStructure);
 	            
-	            if (indexStructure == 23)
-	            	kekuleStructure.displayDoubleBounds();
+	            computeCircuits(kekuleStructure);
 	            
 	            indexStructure ++;
 	        }     
 	        
+	        double energy = 0;
+	        log.write(filename + " ");
 	        for (int index = 0 ; index < rCount.length ; index ++) {
 	        	System.out.print("(" + rCount[index] + " * R" + (index + 1) + ")" );
+	        	log.write(rCount[index] + " ");
+	        	energy += (double) (rCount[index] * (1 / ((index + 1) * (index + 1))));
 	        }
+	        energy = energy / (double)(indexStructure);
+	        
+	        DecimalFormat df = new DecimalFormat("0.000");
+	        
+	        log.write(df.format(energy) + " ");
 	}
 	
 	public static void displayUsage() {
@@ -916,15 +927,31 @@ public class LinSolver {
 	
 	public static void main(String [] args) throws IOException {
 		
-		if (args.length < 1)
+		if (args.length < 1) {
 			displayUsage();
+			System.exit(1);
+		}
 		
 		String filename = args[0];
-		String filenameNoCoords = args[1];
-		debug = new BufferedWriter(new FileWriter(new File("debug_lin")));
+		String filenameNoCoords;
 		
-		//String filename = "/Users/adrien/CLionProjects/ConjugatedCycles/molecules/coronnoids/3_crowns.graph_coord";
-		//String filenameNoCoords = "/Users/adrien/CLionProjects/ConjugatedCycles/molecules/coronnoids/3_crowns_structure.graph";
+		if (args.length >= 2) {
+			filenameNoCoords = args[1];
+		}
+		
+		else {
+			String [] splittedString = filename.split(Pattern.quote("_"));
+			StringBuilder builder = new StringBuilder();
+			for (int i = 0 ; i < splittedString.length - 1 ; i++) {
+				builder.append(splittedString[i]);
+				if (i < splittedString.length - 2)
+					builder.append("_");
+			}
+			filenameNoCoords = builder.toString();
+		}
+		
+		debug = new BufferedWriter(new FileWriter(new File("debug_lin")));
+		log = new BufferedWriter(new FileWriter(new File("output_lin_solver"), true));
 		
 		long begin = System.currentTimeMillis();
 		computeEnergy(filename, filenameNoCoords);
@@ -932,5 +959,8 @@ public class LinSolver {
 		
 		long time = end - begin;
 		System.out.println("\t" + time + " ms.");
+		log.write(time + "\n");
+		
+		log.close();
 	}
 }
