@@ -960,7 +960,7 @@ public class LinSolver {
 		long time = end - begin;
 		System.out.println("\t" + time + " ms.");
 		log.write(time + "\n");
-		
+		     
 		log.close();
 	}
 }
