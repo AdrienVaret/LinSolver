@@ -2,7 +2,7 @@ package utils;
 
 import graphs.Node;
 
-public class Interval {
+public class Interval implements Comparable<Interval>{
 
 	private Node u1, v1, u2, v2;
 	
@@ -41,24 +41,40 @@ public class Interval {
 		return v2;
 	}
 
-	public int getX1() {
+	public int x1() {
 		return x1;
 	}
 
-	public int getX2() {
+	public int x2() {
 		return x2;
 	}
 
-	public int getY1() {
+	public int y1() {
 		return y1;
 	}
 	
-	public int getY2() {
+	public int y2() {
 		return y2;
 	}
 
-	public int getSize() {
+	public int size() {
 		return size;
 	}
-	
+
+	@Override
+	public int compareTo(Interval o) {
+		if (y1 < o.y1())
+			return -1;
+		else if (y1 == o.y1()) {
+			//return 0;
+			if (x1 < o.x1)
+				return -1;
+			else if (x1 == o.x1)
+				return 0;
+			else
+				return 1;
+		}
+		else
+			return 1;
+	}
 }
