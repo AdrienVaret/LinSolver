@@ -39,7 +39,6 @@ public class BenzenoidsSolver {
     private static ArrayList<Integer> nbCyclesList = new ArrayList<Integer>();
     private static int nbStruct = 0;
     public static UndirGraph gr;
-    private static String pathNoCoords = null;
     
     private static final int MAX_CYCLE_SIZE = 10;
     private static int RCount[] = new int[MAX_CYCLE_SIZE];
@@ -70,7 +69,7 @@ public class BenzenoidsSolver {
     
     public static void generateLewisStructures(String path, boolean allSolutions) throws IOException {
 
-        UndirGraph graph = GraphParser.parseUndirectedGraph(path, pathNoCoords);
+        UndirGraph graph = GraphParser.parseUndirectedGraph(path);
         Model model = new Model("Lewis Structures");
 
         graph.exportToGraphviz("graph_output");
@@ -117,11 +116,7 @@ public class BenzenoidsSolver {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-/*            
-            if (debug != null) {
-				debug.write(structure.exportToDebugLine() + "=> ");
-            } 
-*/				
+		
             computeCycles(structure);
 
             structures.add(structure);
@@ -765,7 +760,6 @@ public class BenzenoidsSolver {
             }
         }
 */
-        pathNoCoords = null;
         
         try {
 			debug = new BufferedWriter(new FileWriter(new File("debug_naive")));
@@ -777,9 +771,7 @@ public class BenzenoidsSolver {
         long begin = System.currentTimeMillis();
 
         //analyzeMolecule(path); 
-        pathNoCoords = "/Users/adrien/CLionProjects/ConjugatedCycles/molecules/coronnoids/3_crowns_structure.graph";
-        //pathNoCoords = "/home/adrien/CLionProjects/ConjugatedCycle/molecules/coronnoids/3_crowns_structure.graph";
-        //pathNoCoords = null;
+     
         try {
 			analyzeMolecule("/Users/adrien/CLionProjects/ConjugatedCycles/molecules/coronnoids/3_crowns.graph_coord");
         	//analyzeMolecule("/home/adrien/CLionProjects/ConjugatedCycle/molecules/coronnoids/3_crowns.graph_coord");

@@ -4,7 +4,6 @@ import java.awt.Point;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -171,10 +170,23 @@ public class FileConverter {
 					}
 				}
 			}
-			
+/*			
 			for (String str : hexagonsString) {
 				System.out.println(str);
 				w.write(str + "\n");
+			}
+*/
+			
+			for (int i = 0 ; i < nbHexagons ; i++) {
+				int [] hexagon = hexagons[i];
+				
+				StringBuilder hexagonStr = new StringBuilder();
+				hexagonStr.append("h ");
+				for (int j = 0 ; j < 6 ; j++) {
+					Node u = nodes[hexagon[j]];
+					hexagonStr.append(u.getX() + "_" + u.getY() + " ");
+				}
+				w.write(hexagonStr.toString() + "\n");
 			}
 			
 			w.close();

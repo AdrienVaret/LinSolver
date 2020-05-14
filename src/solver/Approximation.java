@@ -28,9 +28,94 @@ import org.chocosolver.solver.search.strategy.selectors.variables.FirstFail;
 public class Approximation {
 
 	private static final int MAX_CYCLE_SIZE = 4;
-	
 	private static long computeCyclesTime;
-	
+	private static int [][] circuitsToSubstract;
+
+	public static List<ArrayList<Integer>> computeRedundantCycles(UndirGraph molecule){
+
+		long begin = System.currentTimeMillis();
+
+		ArrayList<ArrayList<Integer>> cycles = new ArrayList<>();
+
+		int [] firstVertices = new int [molecule.getNbEdges()];
+		int [] secondVertices = new int [molecule.getNbEdges()];
+
+		for (int n = 4 ; n <= 6 ; n++) {
+
+			GraphModel model = new GraphModel("Cycles");
+
+			int size = 4 * n + 2;
+
+			UndirectedGraph GLB = new UndirectedGraph(model, molecule.getNbNodes(), SetType.BITSET, false);
+			UndirectedGraph GUB = new UndirectedGraph(model, molecule.getNbNodes(), SetType.BITSET, false);
+
+			for (int i = 0; i < molecule.getNbNodes(); i++) {
+				GUB.addNode(i);
+
+				for (int j = (i + 1); j < molecule.getNbNodes(); j++) {
+					if (molecule.getAdjacencyMatrix()[i][j] == 1) {
+						GUB.addEdge(i, j);
+					}
+				}
+			}
+
+			UndirectedGraphVar g = model.graphVar("g", GLB, GUB);
+
+			BoolVar[] boolEdges = new BoolVar[molecule.getNbEdges()];
+			BoolVar[] boolStraightEdges = new BoolVar[molecule.getNbStraightEdges()];
+
+			int index = 0;
+			int indexStraightEdges = 0;
+			for (int i = 0 ; i < molecule.getNbNodes() ; i++) {
+				for (int j = (i+1) ; j < molecule.getNbNodes() ; j++) {
+
+					if (molecule.getAdjacencyMatrix()[i][j] == 1) {
+						boolEdges[index] = model.boolVar("(" + i + "--" + j + ")");
+						model.edgeChanneling(g, boolEdges[index], i, j).post();
+						firstVertices[index] = i;
+						secondVertices[index] = j;
+						index ++;
+
+						Node u1 = molecule.getNodeRef(i);
+						Node u2 = molecule.getNodeRef(j);
+
+						if (u1.getX() == u2.getX()) {
+							boolStraightEdges[indexStraightEdges] = model.boolVar("(" + i + "--" + j + ")");
+							model.edgeChanneling(g, boolStraightEdges[indexStraightEdges], i, j).post();
+							indexStraightEdges ++;
+						}
+					}
+				}
+			}
+
+			model.cycle(g).post();
+			model.arithm(model.nbNodes(g), "=", size).post();
+			model.sum(boolStraightEdges, ">=", 6).post();
+			model.sum(boolStraightEdges, "<=", 10).post();
+
+			model.getSolver().setSearch(new IntStrategy(boolEdges, new FirstFail(model), new IntDomainMin()));
+			Solver solver = model.getSolver();
+
+			while(solver.solve()){
+				Solution solution = new Solution(model);
+				solution.record();
+
+				ArrayList<Integer> cycle = new ArrayList<Integer>();
+
+				for (int i = 0 ; i < boolEdges.length ; i++) {
+					if (solution.getIntVal(boolEdges[i]) == 1) {
+						cycle.add(firstVertices[i]);
+						cycle.add(secondVertices[i]);
+					}
+				}
+
+				cycles.add(cycle);
+			}
+		}
+
+		return cycles;
+	}
+
 	public static List<ArrayList<Integer>> computeCycles(UndirGraph molecule){
 		
 		long begin = System.currentTimeMillis();
@@ -268,7 +353,37 @@ public class Approximation {
 	public static boolean intervalsOnSameLine(Interval i1, Interval i2) {
 		return (i1.y1() == i2.y1() && i1.y2() == i2.y2());
 	}
-	
+
+	public static List<Integer> getHexagons(UndirGraph molecule, ArrayList<Interval> cycle, ArrayList<Interval> intervals){
+		List<Integer> hexagons = new ArrayList<Integer>();
+
+
+
+		for (Interval interval : intervals){
+
+			int [] hexagonsCount = new int [molecule.getNbHexagons()];
+
+			for (int x = interval.x1() ; x <= interval.x2() ; x ++){
+				int u1 = molecule.getCoords().get(x, interval.y1());
+				int u2 = molecule.getCoords().get(x, interval.y2());
+
+				for (Integer hexagon : molecule.getHexagonsVertices().get(u1)) {
+					hexagonsCount[hexagon] ++;
+					if (hexagonsCount[hexagon] == 4)
+						hexagons.add(hexagon);
+				}
+
+				for (Integer hexagon : molecule.getHexagonsVertices().get(u2)){
+					hexagonsCount[hexagon] ++;
+					if (hexagonsCount[hexagon] == 4)
+						hexagons.add(hexagon);
+				}
+			}
+		}
+
+		return hexagons;
+	}
+
 	public static int identifyCircuitsUnion(UndirGraph molecule, ArrayList<Integer> cycle) {
 		
 		EdgeSet edges = computeStraightEdges(molecule, cycle);
@@ -496,10 +611,7 @@ public class Approximation {
 				if ((i1.x2() == i3.x2() && i2.x2() == i1.x2() + 1 && i0.x2() == i1.x2() - 3) || 
 					(i1.x1() == i3.x1() && i2.x1() == i1.x1() - 1 && i0.x1() == i1.x1() + 3))
 						return 32;
-/*			
-				if (Math.abs(i0.x1() - i3.x2()) == 4 || Math.abs(i0.x2() - i3.x1()) == 4)
-					return 32;
-*/				
+
 				if (Math.abs(i0.x1() - i3.x2()) == 8 || Math.abs(i0.x2() - i3.x1()) == 8)
 					return 52;
 					
@@ -510,10 +622,6 @@ public class Approximation {
 				intervals.get(1).size() == 8 && 
 				intervals.get(2).size() == 4 &&
 				intervals.get(3).size() == 2 ) {
-/*				
-				if (Math.abs(i0.x1() - i3.x2()) == 4 || Math.abs(i0.x2() - i3.x1()) == 4)
-					return 33;
-*/
 			
 				if ((i0.x1() == i2.x1() && i1.x1() == i2.x1() - 1 && i3.x1() == i2.x1() + 3) ||
 					(i0.x2() == i2.x2() && i1.x2() == i2.x2() + 1 && i3.x2() == i2.x2() - 3))
@@ -536,7 +644,11 @@ public class Approximation {
 						
 				if ((i0.x2() == i2.x2() && i1.x2() == i3.x2() && i2.x1() == i4.x1() && i2.x1() == i3.x1() + 1) || 
 					(i0.x1() == i2.x1() && i1.x1() == i3.x1() && i2.x2() == i4.x2() && i2.x2() == i3.x2() - 1))
-						return 34;			
+						return 34;
+
+				if ((i0.x2() == i2.x2() && i1.x2() == i3.x2() && i4.x2() == i3.x2() - 1 && i2.x2() == i1.x2() + 1) ||
+					(i0.x1() == i2.x1() && i1.x1() == i3.x1() && i1.x1() == i0.x1() + 1 && i4.x1() == i3.x1() + 1))
+						return 55;
 		}
 		
 		if (intervals.size() == 5 && size == 26 && 
@@ -545,6 +657,10 @@ public class Approximation {
 			if ((i0.x2() == i2.x2() && i3.x2() == i2.x2() - 1 && i1.x1() == i3.x1() && i2.x1() == i4.x1()) ||
 				(i0.x1() == i2.x1() && i3.x1() == i2.x1() + 1 && i1.x2() == i3.x2() && i2.x2() == i4.x2()))
 					return 35;
+
+			 if ((i1.x1() == i3.x1() && i2.x1() == i4.x1() && i3.x1() == i2.x1() + 1 && i0.x1() == i1.x1() + 1) ||
+				 (i1.x2() == i3.x2() && i2.x2() == i4.x2() && i3.x2() == i2.x2() - 1 && i0.x2() == i1.x2() - 1))
+			 		return 57;
 		}
 		
 		else if (intervals.size() == 4 && size == 26 && 
@@ -713,7 +829,61 @@ public class Approximation {
 					(i0.x2() == i2.x2() && i1.x2() == i2.x2() + 1 && i3.x2() == i2.x2() - 1))
 						return 49;
 		}
-		
+
+		else if (intervals.size() == 5 && size == 26 &&
+		         i0.size() == 2 &&
+				 i1.size() == 4 &&
+				 i2.size() == 6 &&
+				 i3.size() == 4 &&
+				 i4.size() == 4) {
+
+				if ((i0.x2() == i2.x2() && i1.x2() == i3.x2() && i1.x2() == i2.x2() - 1 && i4.x2() == i3.x2() - 1) ||
+					(i0.x1() == i2.x1() && i1.x1() == i3.x1() && i1.x1() == i0.x1() + 1 && i4.x1() == i3.x1() + 1))
+						return 56;
+		}
+
+		if (intervals.size() == 5 && size == 26 &&
+		    i0.size() == 4 &&
+			i1.size() == 4 &&
+			i2.size() == 6 &&
+			i3.size() == 4 &&
+			i4.size() == 2) {
+
+			if ((i0.x2() == i2.x2() && i1.x2() == i3.x2() && i3.x2() == i2.x2() - 1 && i4.x2() == i3.x2() - 3) ||
+				(i0.x1() == i2.x1() && i1.x1() == i3.x1() && i3.x1() == i2.x1() + 1 && i4.x1() == i3.x1() + 3))
+					return 58;
+		}
+
+		if (intervals.size() == 3 && size == 26 &&
+		    i0.size() == 4 &&
+			i1.size() == 10 &&
+			i2.size() == 6){
+
+			if ((i0.x1() == i2.x1() && i1.x1() == i0.x1() - 3) ||
+				(i0.x2() == i2.x2() && i1.x2() == i0.x2() + 3))
+					return 59;
+		}
+
+		if (intervals.size() == 3 && size == 26 &&
+		    i0.size() == 6 &&
+			i1.size() == 8 &&
+			i2.size() == 6) {
+
+			if ((i0.x2() == i2.x2() && i1.x2() == i0.x2() - 1) ||
+				(i0.x1() == i2.x1() && i1.x1() == i0.x1() + 1))
+					return 60;
+		}
+
+		if (intervals.size() == 3 && size == 26 &&
+		    i0.size() == 6 &&
+			i1.size() == 10 &&
+			i2.size() == 4) {
+
+			if ((i0.x1() == i2.x1() && i1.x1() == i0.x1() - 3) ||
+				(i0.x2() == i2.x2() && i1.x2() == i0.x2() + 3))
+					return 61;
+		}
+
 		return -1;
 	}
 	
@@ -955,9 +1125,6 @@ public class Approximation {
 			if (firstVertex == -1)
 				break;
 			
-			//lines[i1] = firstVertex;
-			//i1 ++;
-			
 			if (i1 == i2) {
 				lines[i1] = firstVertex;
 				i1 ++;
@@ -1038,7 +1205,127 @@ public class Approximation {
 			
 		}
 	}
-	
+
+	public static void initSubstractTable(){
+		circuitsToSubstract = new int [62][2];
+		circuitsToSubstract[10][0] = 3;
+		circuitsToSubstract[10][1] = 13;
+
+		circuitsToSubstract[18][0] = 0;
+		circuitsToSubstract[18][1] = 3;
+
+		circuitsToSubstract[17][0] = 0;
+		circuitsToSubstract[17][1] = 3;
+
+		circuitsToSubstract[18][0] = 0;
+		circuitsToSubstract[18][1] = 3;
+
+		circuitsToSubstract[19][0] = 0;
+		circuitsToSubstract[19][1] = 3;
+
+		circuitsToSubstract[20][0] = 0;
+		circuitsToSubstract[20][1] = 1;
+
+		circuitsToSubstract[21][0] = 0;
+		circuitsToSubstract[21][1] = 1;
+
+		circuitsToSubstract[22][0] = 0;
+		circuitsToSubstract[22][1] = 1;
+
+		circuitsToSubstract[23][0] = 0;
+		circuitsToSubstract[23][1] = 1;
+
+		circuitsToSubstract[24][0] = 0;
+		circuitsToSubstract[24][1] = 1;
+
+		circuitsToSubstract[25][0] = 0;
+		circuitsToSubstract[25][1] = 1;
+
+		circuitsToSubstract[26][0] = 0;
+		circuitsToSubstract[26][1] = 1;
+
+		circuitsToSubstract[27][0] = 0;
+		circuitsToSubstract[27][1] = 1;
+
+		circuitsToSubstract[28][0] = 0;
+		circuitsToSubstract[28][1] = 2;
+
+		circuitsToSubstract[29][0] = 0;
+		circuitsToSubstract[29][1] = 2;
+
+		circuitsToSubstract[30][0] = 0;
+		circuitsToSubstract[30][1] = 1;
+
+		circuitsToSubstract[31][0] = 0;
+		circuitsToSubstract[31][1] = 1;
+
+		circuitsToSubstract[32][0] = 0;
+		circuitsToSubstract[32][1] = 1;
+
+		circuitsToSubstract[33][0] = 0;
+		circuitsToSubstract[33][1] = 1;
+
+		circuitsToSubstract[34][0] = 0;
+		circuitsToSubstract[34][1] = 2;
+
+		circuitsToSubstract[35][0] = 0;
+		circuitsToSubstract[35][1] = 2;
+
+		circuitsToSubstract[36][0] = 0;
+		circuitsToSubstract[36][1] = 1;
+
+		circuitsToSubstract[37][0] = 0;
+		circuitsToSubstract[37][1] = 1;
+
+		circuitsToSubstract[38][0] = 0;
+		circuitsToSubstract[38][1] = 1;
+
+		circuitsToSubstract[39][0] = 0;
+		circuitsToSubstract[39][1] = 1;
+
+		circuitsToSubstract[40][0] = 0;
+		circuitsToSubstract[40][1] = 1;
+
+		circuitsToSubstract[41][0] = 0;
+		circuitsToSubstract[41][1] = 1;
+
+		circuitsToSubstract[42][0] = 0;
+		circuitsToSubstract[42][1] = 2;
+
+		circuitsToSubstract[51][0] = 0;
+		circuitsToSubstract[51][1] = 2;
+
+		circuitsToSubstract[52][0] = 0;
+		circuitsToSubstract[52][1] = 1;
+
+		circuitsToSubstract[53][0] = 0;
+		circuitsToSubstract[53][1] = 1;
+
+		circuitsToSubstract[54][0] = 0;
+		circuitsToSubstract[54][1] = 1;
+
+		circuitsToSubstract[55][0] = 0;
+		circuitsToSubstract[55][1] = 1;
+
+		circuitsToSubstract[56][0] = 0;
+		circuitsToSubstract[56][1] = 2;
+
+		circuitsToSubstract[57][0] = 0;
+		circuitsToSubstract[57][1] = 1;
+
+		circuitsToSubstract[58][0] = 0;
+		circuitsToSubstract[58][1] = 2;
+
+		circuitsToSubstract[59][0] = 0;
+		circuitsToSubstract[59][1] = 2;
+
+		circuitsToSubstract[60][0] = 0;
+		circuitsToSubstract[60][1] = 1;
+
+		circuitsToSubstract[61][0] = 0;
+		circuitsToSubstract[61][1] = 1;
+	}
+
 	public static void computeEnergy(UndirGraph molecule) {
 		
 		int [] cyclesConfigurations = new int [] {2, 2, 2, 1, 2, 2, 1, 1, 1, 2, 1, 0, 0, 0, 0};
@@ -1060,6 +1347,21 @@ public class Approximation {
 				circuits[size - 1] += (nbPerfectMatching * cyclesConfigurations[cycleConfiguration.getX()]);
 			}
 		}
+
+		List<ArrayList<Integer>> redundantsCycles = computeRedundantCycles(molecule);
+
+		for (ArrayList<Integer> cycle : redundantsCycles){
+
+			int configuration = identifyCircuitsUnion(molecule, cycle);
+			int [] toSubstract = circuitsToSubstract[configuration];
+			circuits[2] -= toSubstract[0];
+			circuits[3] -= toSubstract[1];
+		}
+
+		for (int i = 0 ; i < circuits.length ; i++){
+			System.out.print(circuits[i] + " ");
+		}
+		System.out.println("");
 	}
 	
 	public static void displayTime() {
@@ -1068,28 +1370,10 @@ public class Approximation {
 	 
 	public static void main(String[] args) {
 		String path = "/Users/adrien/CLionProjects/ConjugatedCycles/molecules/coronnoids/2_crowns.graph_coord";
-		String pathNoCoords = "/Users/adrien/CLionProjects/ConjugatedCycles/molecules/coronnoids/2_crowns.graph";
 		
-		UndirGraph molecule = GraphParser.parseUndirectedGraph(path, pathNoCoords);
-		
-		List<ArrayList<Integer>> cycles = computeCycles(molecule);
-	
-		System.out.println(cycles.size() + " cycles");
-		
-		int i = 0;
-		for (ArrayList<Integer> cycle : cycles) {
-			
-			if (i == 54)
-				System.out.print("");
-			
-			SubMolecule subMolecule = substractCycle(molecule, cycle);
-			
-			System.out.println("[" + i + "]" + displayCycle(cycle) + " => " + getCycleIndex(molecule, cycle) 
-			                 + "\t\tDET=" + Math.abs(computePerfectMatchings(molecule, subMolecule)));
+		UndirGraph molecule = GraphParser.parseUndirectedGraph(path);
 
-			i++;
-		}
-		
-		displayTime();
+		computeEnergy(molecule);
+
 	}
 }

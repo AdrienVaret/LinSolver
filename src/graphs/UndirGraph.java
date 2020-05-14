@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
@@ -13,20 +14,17 @@ public class UndirGraph {
 	
 	private RelativeMatrix nodesMem; //DEBUG
 	
-	private int nbNodes, nbEdges, nbHexagons, maxIndex;
-	
+	private int nbNodes, nbEdges, nbHexagons, nbStraightEdges, maxIndex;
 	private ArrayList<ArrayList<Integer>> edgeMatrix;
 	private int [][] adjacencyMatrix;
-	
 	private ArrayList<String> edgesString;
 	private ArrayList<String> hexagonsString;
-	
 	private Node [] nodesRefs;
-	
 	private RelativeMatrix coords;
-	
 	private int [][] hexagons;
-	
+
+	private ArrayList<ArrayList<Integer>> hexagonsVertices;
+
 	/**
 	 * Constructors
 	 */
@@ -67,6 +65,20 @@ public class UndirGraph {
 		
 		hexagons = new int[nbHexagons][6];
 		initHexagons();
+
+		nbStraightEdges = 0;
+
+		for (int i = 0 ; i < adjacencyMatrix.length ; i++){
+			for (int j = (i+1) ; j < adjacencyMatrix[i].length ; j++){
+				if (adjacencyMatrix[i][j] == 1){
+					Node u1 = nodesRefs[i];
+					Node u2 = nodesRefs[j];
+
+					if (u1.getX() == u2.getX())
+						nbStraightEdges ++;
+				}
+			}
+		}
 	}
 	
 	/**
@@ -117,7 +129,15 @@ public class UndirGraph {
 	public Node[] getNodesRefs() {
 		return nodesRefs;
 	}
-	
+
+	public ArrayList<ArrayList<Integer>> getHexagonsVertices() {
+		return hexagonsVertices;
+	}
+
+	public int getNbStraightEdges(){
+		return nbStraightEdges;
+	}
+
 	/**
 	 * Class's methods
 	 */
@@ -158,6 +178,12 @@ public class UndirGraph {
 	}
 	
 	public void initHexagons() {
+
+		hexagonsVertices = new ArrayList<ArrayList<Integer>>();
+
+		for (int i = 0 ; i < nbNodes ; i++)
+			hexagonsVertices.add(new ArrayList<Integer>());
+
 		for (int i = 0 ; i < nbHexagons ; i++) {
 			String hexagon = hexagonsString.get(i);
 			String [] sHexagon = hexagon.split(" ");
@@ -167,7 +193,9 @@ public class UndirGraph {
 				int x = Integer.parseInt(sVertex[0]);
 				int y = Integer.parseInt(sVertex[1]);
 				hexagons[i][j-1] = coords.get(x, y);
+				hexagonsVertices.get(coords.get(x, y)).add(i);
 			}
 		}
 	}
+
 }
